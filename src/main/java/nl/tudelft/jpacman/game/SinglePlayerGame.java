@@ -6,15 +6,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ScheduledExecutorService;
 
-import nl.tudelft.jpacman.board.Direction;
-import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.level.Level;
-import nl.tudelft.jpacman.board.Unit;
-import nl.tudelft.jpacman.fruit.Fruit;
-import nl.tudelft.jpacman.fruit.FruitFactory;
+import nl.tudelft.jpacman.level.MovableCharacter;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.npc.Bullet;
-import nl.tudelft.jpacman.npc.NPC;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 import nl.tudelft.jpacman.sprite.PacManSprites;
 
@@ -36,14 +31,10 @@ public class SinglePlayerGame extends Game {
 	 * The level of this game.
 	 */
 	private final Level level;
-	
-	/**
-	 * A lock that prevent Fruit from being created on the board, when the lock value is true, a Fruit can appear on the board and false when a fruit can't appear.
-	 */
-	private boolean fruitLock = true;
 
 	/**
-	 * A lock that prevent a bullet from being created on the board, when the lock value is true, a bullet can appear on the board and false when a bullet can't appear.
+	 * A lock that prevent a bullet from being created on the board, when the lock value is true,
+	 * a bullet can appear on the board and false when a bullet can't appear.
 	 */
 	private boolean shootLock = true;
 	/**
@@ -73,57 +64,6 @@ public class SinglePlayerGame extends Game {
 		return level;
 	}
 
-	/**
-	 * Moves the player one square to the north if possible.
-	 */
-	public void moveUp() {
-		move(player, Direction.NORTH);
-	}
-
-	/**
-	 * Moves the player one square to the south if possible.
-	 */
-	public void moveDown() {
-		move(player, Direction.SOUTH);
-	}
-
-	/**
-	 * Moves the player one square to the west if possible.
-	 */
-	public void moveLeft() {
-		move(player, Direction.WEST);
-	}
-
-	/**
-	 * Moves the player one square to the east if possible.
-	 */
-	public void moveRight() {
-		move(player, Direction.EAST);
-	}
-
-	@Override
-	public void fruitEvent() {
-		if(fruitLock){
-			fruitLock = false;
-			FruitFactory fruitFactory = level.getFruitFactory();
-			Fruit fruit = fruitFactory.getRandomFruit();
-			Square postion = fruitFactory.getRandomFruitPosition();
-			fruit.occupy(postion);
-			TimerTask timerTask = new TimerTask() {
-		        public void run() {
-		        	for(Unit occupant : postion.getOccupants()){
-		        		if(occupant instanceof Fruit){
-		        			fruit.leaveSquare();
-		        		}
-		        	}
-		        	fruitLock = true;
-		        }
-		    };
-		    Timer timer = new Timer();
-		    timer.schedule(timerTask, fruit.getLifetime() * 1000);
-		}
-	}
-
 	@Override
 	public void ShootingEvent() {
 		if(shootLock){
@@ -141,24 +81,26 @@ public class SinglePlayerGame extends Game {
 		}
 	}
 
-	@Override
-	public void NPCCleanEvent(List<NPC> deadNPCs, Map<NPC, ScheduledExecutorService> npcs) {
-		for(NPC npc : deadNPCs) {
-			if(npc instanceof Ghost) {
-				TimerTask timerTask = new TimerTask() {
-				    public void run() {
-				    	npc.leaveSquare();
-				    	npcs.remove(npc);
-				    }
-				};
-				int deadGhostAnimationTime = 5 * 200;
-				Timer timer = new Timer();
-				timer.schedule(timerTask, deadGhostAnimationTime);
-			}
-			else {
-				npc.leaveSquare();
-				npcs.remove(npc);
-			}
+	public void ghostCleanEvent(List<Ghost> deadNPCs, Map<Ghost, ScheduledExecutorService> npcs) {
+		Timer timer;
+		for(MovableCharacter npc : deadNPCs) {
+			TimerTask timerTask = new TimerTask() {
+			    public void run() {
+			    	npc.leaveSquare();
+			    	npcs.remove(npc);
+			    }
+			};
+			int deadGhostAnimationTime = 5 * 200;
+			timer = new Timer();
+			timer.schedule(timerTask, deadGhostAnimationTime);
+		}
+	}
+	
+	public void bulletCleanEvent(List<Bullet> deadBullets, Map<Bullet, ScheduledExecutorService> bullets) {
+		for(MovableCharacter bullet : deadBullets) {
+		    bullets.get(bullet).shutdownNow();
+		    bullet.leaveSquare();
+		    bullets.remove(bullet);
 		}
 	}
 }

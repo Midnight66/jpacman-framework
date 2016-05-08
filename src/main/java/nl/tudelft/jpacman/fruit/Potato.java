@@ -1,9 +1,9 @@
 package nl.tudelft.jpacman.fruit;
 
-import java.util.List;
+import java.util.Set;
 
+import nl.tudelft.jpacman.level.Level;
 import nl.tudelft.jpacman.level.Player;
-import nl.tudelft.jpacman.npc.NPC;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -13,29 +13,28 @@ import nl.tudelft.jpacman.sprite.Sprite;
 public class Potato extends Fruit{
 	
 	/**
-	 * The list of NPCs active in this game.
+	 * The level where this potato appeared.
 	 */
-	private List<NPC> npcs;
+	private Level level;
 	
 	/**
 	 * Create a Pomgranate object
-	 * @param Sprite sprite the sprite of this fruit
-	 * @param int lifetime the time for which this fruit will remain on the board
-	 * @param int effectDuration the time for which the power of this fruit is active.
-	 * @param npcs The list of NPCs active in this game.
+	 * @param sprite the sprite of this fruit
+	 * @param lifetime the time for which this fruit will remain on the board
+	 * @param effectDuration the time for which the power of this fruit is active.
+	 * @param l the level where this potato appeared.
 	 */
-	protected Potato(Sprite sprite, int lifetime, int effectDuration, List<NPC> npcs) {
+	protected Potato(Sprite sprite, int lifetime, int effectDuration, Level l) {
 		super(sprite, lifetime, effectDuration);
-		this.npcs = npcs;
+		level = l;
 	}
 
 	@Override
 	public void fruitEffect(Player p) {
-		Ghost g;
-		for(NPC npc: npcs){
-			if(npc instanceof Ghost){
-				g = (Ghost) npc;
-				g.temporaryAcceleration(getEffectDuration());
+		Set<Ghost> ghosts = level.getGhosts().keySet();
+		for(Ghost ghost: ghosts){
+			if(!ghost.getFearedMode()){
+				ghost.temporaryAcceleration(getEffectDuration());
 			}
 		}
 	}

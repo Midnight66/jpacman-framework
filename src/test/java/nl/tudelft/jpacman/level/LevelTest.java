@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import nl.tudelft.jpacman.Launcher;
 import nl.tudelft.jpacman.board.Board;
@@ -14,8 +13,8 @@ import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.npc.NPC;
 
 import nl.tudelft.jpacman.npc.ghost.Clyde;
-import nl.tudelft.jpacman.npc.ghost.Ghost;
 import nl.tudelft.jpacman.npc.ghost.GhostColor;
+import nl.tudelft.jpacman.sprite.PacManSprites;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,10 +32,12 @@ public class LevelTest {
 	 */
 	private Level level;
 
+	private static final PacManSprites SPRITE_STORE = new PacManSprites();
+
 	/**
 	 * An NPC on this level.
 	 */
-	private final NPC ghost = mock(NPC.class);
+	private NPC ghost;
 
 	/**
 	 * Starting position 1.
@@ -64,10 +65,9 @@ public class LevelTest {
 	 */
 	@Before
 	public void setUp() {
-		final long defaultInterval = 100L;
+		ghost = new Clyde(SPRITE_STORE.getGhostSprite(GhostColor.ORANGE), SPRITE_STORE.getGhostExplodeAnimation());
 		level = new Level(board, Lists.newArrayList(ghost), Lists.newArrayList(
 				square1, square2), collisions);
-		when(ghost.getInterval()).thenReturn(defaultInterval);
 	}
 
 	/**
@@ -164,7 +164,7 @@ public class LevelTest {
 	@SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
 	public void testSetBoardToUse() {
 		Launcher la = new Launcher();
-		assertEquals(la.getBoardToUse(), "/boardExtendedBase.txt");
+		assertTrue(la.getBoardToUse() == null);
 		la.setBoardToUse("/boardExtendedAdd1.txt");
 		assertEquals(la.getBoardToUse(), "/boardExtendedAdd1.txt");
 	}

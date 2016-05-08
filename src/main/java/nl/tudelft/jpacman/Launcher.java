@@ -36,14 +36,14 @@ public class Launcher {
 	 */
 	private static Launcher launcher;
 
-	private PacManUI pacManUI;
+	private static PacManUI pacManUI;
 
-	private Game game;
+	private static Game game;
 
 	/**
 	 * Le .txt qui doit etre choisi comme map (définit dans PacManUI)
 	 */
-	private String boardToUse = null;
+	private String boardToUse;
 
 	public Launcher()
 	{
@@ -66,8 +66,7 @@ public class Launcher {
 	public Game makeGame() {
 		GameFactory gf = getGameFactory();
 		String[] board = {"Jeu normal", "Map infinie", "Jeu avec fruits"};
-		JOptionPane jop = new JOptionPane();
-		String nom = (String)jop.showInputDialog(null,
+		String nom = (String) JOptionPane.showInputDialog(null,
 				"Veuillez choisir un mode de jeu !",
 				"PACMAN GAME !",
 				JOptionPane.QUESTION_MESSAGE,
@@ -75,22 +74,21 @@ public class Launcher {
 				board,
 				board[0]);
 
-		if(nom == board[1]) {
+		Level level;
+		if(nom.equals(board[1])) {
 			boardToUse = "/boardExtendedBase.txt";
+			level = makeLevel();
+			level.infiniteMode = true;
+			return gf.createSinglePlayerGame(level);
 		}
-		else if(nom == board[2]){
+		else if(nom.equals(board[2])){
 			boardToUse = "/boardFruit.txt";
 		}
 		else{
 			boardToUse = "/board.txt";
 		}
-		Level level = makeLevel();
-		if(boardToUse == "/boardExtendedBase.txt"){
-			level.infiniteMode = true;
-		}
-		else{
-			level.infiniteMode = false;
-		}
+		level = makeLevel();
+		level.infiniteMode = false;
 		return gf.createSinglePlayerGame(level);
 	}
 
@@ -223,7 +221,8 @@ public class Launcher {
 	}
 
 	/**
-	 * Disposes of the UI. For more information see {@link javax.swing.JFrame#dispose()}.
+	 * Disposes of the UI. For more information see
+	 * {@link javax.swing.JFrame#dispose()}.
 	 */
 	public void dispose() {
 		pacManUI.dispose();

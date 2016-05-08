@@ -14,9 +14,9 @@ public class Fish extends Fruit {
 	
 	/**
 	 * Create a Fish object
-	 * @param Sprite sprite the sprite of this fish
-	 * @param int lifetime the time for which this fish will remain on the board
-	 * @param int effectDuration the time for which the power of this fish is active.
+	 * @param sprite the sprite of this fish
+	 * @param lifetime the time for which this fish will remain on the board
+	 * @param effectDuration the time for which the power of this fish is active.
 	 */
 	protected Fish(Sprite sprite, int lifetime, int effectDuration) {
 		super(sprite, lifetime, effectDuration);
@@ -24,11 +24,11 @@ public class Fish extends Fruit {
 
 	@Override
 	public void fruitEffect(Player p) {
-		p.setMobility(false);
+		p.setMovable(false);
 		p.setSprites(new PacManSprites().getPacmanParalizedSprites());
 		TimerTask timerTask = new TimerTask() {
 		    public void run() {
-		        p.setMobility(true);
+		        p.setMovable(true);
 		        p.setSprites(new PacManSprites().getPacmanSprites());
 		    }
 		};
