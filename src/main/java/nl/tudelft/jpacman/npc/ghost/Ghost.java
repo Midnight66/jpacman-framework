@@ -140,6 +140,28 @@ public abstract class Ghost extends NPC {
 		}
 	}
 
+	public static Ghost addGhost(GhostFactory ghostFact, int index){
+		Ghost g;
+		switch (index) {
+			case 0:
+				g = ghostFact.createBlinky();
+				break;
+			case 1:
+				g = ghostFact.createInky();
+				break;
+			case 2:
+				g = ghostFact.createPinky();
+				break;
+			case 3:
+				g = ghostFact.createClyde();
+				break;
+			default:
+				g = ghostFact.createBlinky();
+				break;
+		}
+		return g;
+	}
+
 	/**
 	 * Determines a possible move in a random direction.
 	 * 

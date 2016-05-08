@@ -6,7 +6,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import nl.tudelft.jpacman.Launcher;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
@@ -84,12 +83,6 @@ public class Level {
 	private FruitFactory fruitFactory;
 
 	/**
-	 * The players on this level.
-	 */
-	private final Map<Player, ScheduledExecutorService> players;
-	
-
-	/**
 	 * The table of possible collisions between units.
 	 */
 	private final CollisionMap collisions;
@@ -101,23 +94,21 @@ public class Level {
 
 	private static final PacManSprites SPRITE_STORE = new PacManSprites();
 
+	private TimerTasks tks = new TimerTasks();
+
+	/**
+	 * Timer used to handle the game;
+	 */
 	private Timer timerHunterMode;
-
 	private Timer timerRespawn;
-
 	private Timer timerWarning;
-
 	private Timer addGhostTask;
-
 	private Timer addFruitTask;
-
 	private Timer speedUpTask;
-
-	private boolean norm;
 
 	private static Level level;
 
-	Random random;
+	private Random random;
 
 	/**
 	 * Creates a new level for the board.
@@ -152,15 +143,7 @@ public class Level {
 		this.players = new HashMap<>();
 		this.collisions = collisionMap;
 		this.observers = new ArrayList<>();
-		Launcher la = Launcher.getLauncher();
 		random = new Random();
-		if(la.getBoardToUse().equals("/Board.txt") ||
-				la.getBoardToUse().equals("BoardFruit.txt")){
-			this.norm = true;
-		}
-		else {
-			this.norm = false;
-		}
 		if(level == null) {
 			level = this;
 		}
@@ -177,15 +160,6 @@ public class Level {
 			return;
 		}
 		observers.add(observer);
-	}
-
-	/**
-	 * Removes an observer if it was listed.
-	 *
-	 * @param observer The observer to be removed.
-	 */
-	public void removeObserver(LevelObserver observer) {
-		observers.remove(observer);
 	}
 
 	/**
@@ -274,10 +248,10 @@ public class Level {
 		addGhostTask = new Timer();
 		speedUpTask = new Timer();
 		if(infiniteMode) {
-			addGhostTask.schedule(new TimerAddGhostTask(), (nbr+10)*1000);
-			speedUpTask.schedule(new TimerSpeedUpTask(), 10000, 10000);
+			addGhostTask.schedule(tks.createAddGhostTask(), (nbr+10)*1000);
+			speedUpTask.schedule(tks.createSpeedUpTask(), 10000, 10000);
 		}
-		addFruitTask.schedule(new TimerAddFruitTask(), (nbr+10)*1000);
+		addFruitTask.schedule(tks.createAddFruitTask(), (nbr+10)*1000);
 	}
 
 	/**
@@ -300,29 +274,30 @@ public class Level {
 	/**
 	 * Starts all Character movement scheduling.
 	 */
-	private void startCharacters() {
+	public void startCharacters() {
 		MovableCharacter mc;
+		ScheduledExecutorService service;
 		for (final Ghost ghost : ghosts.keySet()) {
 			mc = ghost;
-			ScheduledExecutorService service = Executors
+			service = Executors
 					.newSingleThreadScheduledExecutor();
-			service.schedule(new CharacterMoveTask(service, mc),
+			service.schedule(tks.createCharacterMoveTask(service, mc),
 					mc.getInterval() / 2, TimeUnit.MILLISECONDS);
 			ghosts.put(ghost, service);
 		}
 		for (final Player player : players.keySet()) {
 			mc = player;
-			ScheduledExecutorService service = Executors
+			service = Executors
 					.newSingleThreadScheduledExecutor();
-			service.schedule(new CharacterMoveTask(service, mc),
+			service.schedule(tks.createCharacterMoveTask(service, mc),
 					mc.getInterval() / 2, TimeUnit.MILLISECONDS);
 			players.put(player, service);
 		}
 		for (final Bullet bullet : bullets.keySet()) {
 			mc = bullet;
-			ScheduledExecutorService service = Executors
+			service = Executors
 					.newSingleThreadScheduledExecutor();
-			service.schedule(new CharacterMoveTask(service, mc),
+			service.schedule(tks.createCharacterMoveTask(service, mc),
 					mc.getInterval() / 2, TimeUnit.MILLISECONDS);
 			bullets.put(bullet, service);
 		}
@@ -332,7 +307,7 @@ public class Level {
 	 * Stops all NPC movement scheduling and interrupts any movements being
 	 * executed.
 	 */
-	private void stopCharacters() {
+	public void stopCharacters() {
 		for (Entry<Ghost, ScheduledExecutorService> e : ghosts.entrySet()) {
 			e.getValue().shutdownNow();
 		}
@@ -353,49 +328,16 @@ public class Level {
 			ScheduledExecutorService service = Executors
 					.newSingleThreadScheduledExecutor();
 			GhostFactory ghostFact = new GhostFactory(SPRITE_STORE);
-			int nombre = random.nextInt(6);
+			int nbr = random.nextInt(6);
 			int ghostIndex = random.nextInt(4);
 			addGhostTask.cancel();
 			addGhostTask = new Timer();
-			addGhostTask.schedule(new TimerAddGhostTask(), ((nombre + 4) + this.ghosts.size()) * 1000);
-			Ghost g;
-			switch (ghostIndex) {
-				case 0:
-					g = ghostFact.createBlinky();
-					break;
-				case 1:
-					g = ghostFact.createInky();
-					break;
-				case 2:
-					g = ghostFact.createPinky();
-					break;
-				case 3:
-					g = ghostFact.createClyde();
-					break;
-				default:
-					g = ghostFact.createBlinky();
-					break;
-			}
+			addGhostTask.schedule(tks.createAddGhostTask(), ((nbr + 4) + this.ghosts.size()) * 1000);
+			Ghost g = Ghost.addGhost(ghostFact, ghostIndex);
 			ghosts.put(g, service);
 			Square squareGhost = null;
-			while (squareGhost == null) {
-				Square posPlayer = players.keySet().iterator().next().getSquare();
-				int X = posPlayer.getCoordX();
-				int Y = posPlayer.getCoordY();
-				int i, j;
-				if(X-10 < 0){
-					i =  random.nextInt(board.getWidthOfOneMap()-1);
-				}
-				else{
-					i = (X-10) + random.nextInt(board.getWidthOfOneMap()-1);
-				}
-				if(Y-14 < 0){
-					j = random.nextInt(4);
-				}
-				else{
-					j = (Y-14) + random.nextInt(4);
-				}
-				squareGhost = board.squareAt(i, j);
+			while(squareGhost  == null) {
+				squareGhost = addUnitOnSquare(board.getWidthOfOneMap(), 4);
 				if (squareGhost.isAccessibleTo(g)) {
 					g.occupy(squareGhost);
 				}
@@ -409,66 +351,71 @@ public class Level {
 	}
 
 	/**
-	 * Permet d'augmenter la vitesse des fantomes
-	 */
-	private void speedUpTask(){
-		Ghost g;
-		for (MovableCharacter npc : ghosts.keySet()) {
-			g = (Ghost) (npc);
-			g.setSpeed(g.getSpeed() + 0.05);
-		}
-	}
-
-	/**
 	 * Permet d'ajouter des fruits dans le jeu
 	 */
 	public void addFruitTask()
 	{
+		Timer timer = new Timer();
+		TimerTask timerTask;
 		int nbr = random.nextInt(6);
 		addFruitTask.cancel();
 		addFruitTask = new Timer();
-		addFruitTask.schedule(new TimerAddFruitTask(), (nbr+10)*1000);
+		addFruitTask.schedule(tks.createAddFruitTask(), (nbr+10)*1000);
 		Fruit fruit = fruitFactory.getRandomFruit();
 		Square squareFruit = null;
+		Player p = players.keySet().iterator().next();
+		Square posPlayer = p.getSquare();
 		while(squareFruit == null) {
-			Player p = players.keySet().iterator().next();
-			Square posPlayer = p.getSquare();
-			int X, Y;
-			if(this.norm){
-				X = posPlayer.getCoordX();
-				Y = posPlayer.getCoordY();
-			}
-			else{
-				X = 0;
-				Y = 0;
-			}
-			int i, j;
-			if(X-10 < 0){
-				i =  random.nextInt(board.getWidthOfOneMap()-2);
-			}
-			else{
-				i = (X-10) + random.nextInt(board.getWidthOfOneMap()-2);
-			}
-			if(Y-14 < 0){
-				j = random.nextInt(board.getHeightOfOneMap()-2);
-			}
-			else{
-				j = (Y-14) + random.nextInt(board.getHeightOfOneMap()-2);
-			}
-			squareFruit = board.squareAt(i, j);
+			squareFruit = addUnitOnSquare(board.getWidthOfOneMap()-2, board.getHeightOfOneMap()-2);
 			if (Navigation.shortestPath(posPlayer, squareFruit, p) != null) {
 				fruit.occupy(squareFruit);
-				TimerTask timerTask = new TimerTask() {
+				timerTask = new TimerTask() {
 					public void run() {
 						fruit.leaveSquare();
 					}
 				};
-				Timer timer = new Timer();
 				timer.schedule(timerTask, fruit.getLifetime() * 1000);
 			}
 			else {
 				squareFruit = null;
 			}
+		}
+	}
+
+	public Square addUnitOnSquare(int random1, int random2) {
+		Random random = new Random();
+		int X, Y;
+		int i, j;
+		Square posPlayer = players.keySet().iterator().next().getSquare();
+		X = posPlayer.getCoordX();
+		Y = posPlayer.getCoordY();
+
+		i = Math.max(1+random.nextInt(random1), (X-(board.getWidthOfOneMap()-1)/2)+random.nextInt(random1));
+		j = Math.max(1+random.nextInt(random2), (Y-(board.getHeightOfOneMap()-1)/2)+random.nextInt(random2));
+
+		/*if (X - (board.getWidthOfOneMap()-1)/2 < 0) {
+			i = random.nextInt(random1);
+		} else {
+			i = ((board.getWidthOfOneMap()-1)/2) + random.nextInt(random1);
+		}
+		if (Y - (board.getHeightOfOneMap()-1)/2 < 0) {
+			j = random.nextInt(random2);
+		} else {
+			j = ((board.getHeightOfOneMap()-1)/2) + random.nextInt(random2);
+		}*/
+		return board.squareAt(i, j);
+	}
+
+
+
+	/**
+	 * Permet d'augmenter la vitesse des fantomes
+	 */
+	public void speedUpTask(){
+		Ghost g;
+		for (MovableCharacter npc : ghosts.keySet()) {
+			g = (Ghost) (npc);
+			g.setSpeed(g.getSpeed() + 0.05);
 		}
 	}
 
@@ -579,7 +526,6 @@ public class Level {
 		return false;
 	}
 
-
 	/**
 	 * Start the Hunter Mode for Pacman.
 	 * Start the Feared Mode for Ghosts.
@@ -596,11 +542,11 @@ public class Level {
 						timerHunterMode = new Timer();
 						timerWarning = new Timer();
 						if (Pellet.superPelletLeft >= 2) {
-							timerHunterMode.schedule(new TimerHunterTask(), 7000);
-							timerWarning.schedule(new TimerWarningTask(), 5000, 250);
+							timerHunterMode.schedule(tks.createStopHunterModeTask(), 7000);
+							timerWarning.schedule(tks.createWarningTask(), 5000, 250);
 						} else {
-							timerHunterMode.schedule(new TimerHunterTask(), 5000);
-							timerWarning.schedule(new TimerWarningTask(), 3000, 250);
+							timerHunterMode.schedule(tks.createStopHunterModeTask(), 5000);
+							timerWarning.schedule(tks.createWarningTask(), 3000, 250);
 						}
 						((Ghost) u).startFearedMode();
 					}
@@ -635,8 +581,7 @@ public class Level {
 	 * Handle the end of the Hunter Mode for Pacman and
 	 * warning him about that.
 	 */
-	public void warningMode()
-	{
+	public void warningMode() {
 		Board b = getBoard();
 		Ghost.count++;
 		for (int x = 0; x < b.getWidth(); x++) {
@@ -653,25 +598,17 @@ public class Level {
 	/**
 	 * Start the Timer to respawn a ghost after being ate by Pacman.
 	 */
-	public void respawnGhost()
-	{
+	public void respawnGhost() {
 		Ghost.ghostLeft++;
 		Ghost ateGhost = PlayerCollisions.ateGhost.get(PlayerCollisions.ateGhost.size()-1);
 		PlayerCollisions.ateGhost.remove(PlayerCollisions.ateGhost.size()-1);
 		timerRespawn = new Timer();
-		timerRespawn.schedule(new TimerRespawnTask(ateGhost), 5000);
+		timerRespawn.schedule(tks.createRespawnTask(ateGhost), 5000);
 	}
 	
-	public void respawnParticularGhost(Ghost ghost)
-	{
+	public void respawnParticularGhost(Ghost ghost) {
 		timerRespawn = new Timer();
-		timerRespawn.schedule(new TimerRespawnTask(ghost), 5000);
-	}
-
-	public void respawnParticularGhost(Ghost ghost)
-	{
-		timerRespawn = new Timer();
-		timerRespawn.schedule(new TimerRespawnTask(ghost), 5000);
+		timerRespawn.schedule(tks.createRespawnTask(ghost), 5000);
 	}
 
 	/**
@@ -702,163 +639,6 @@ public class Level {
 		return level;
 	}
 
-	/**
-	 * A task that moves an NPC and reschedules itself after it finished.
-	 *
-	 * @author Jeroen Roosen
-	 */
-	private final class CharacterMoveTask implements Runnable {
-
-		/**
-		 * The service executing the task.
-		 */
-		private final ScheduledExecutorService service;
-
-		/**
-		 * The NPC to move.
-		 */
-		private final MovableCharacter character;
-
-		/**
-		 * Creates a new task.
-		 *
-		 * @param s
-		 *            The service that executes the task.
-		 * @param c
-		 *            The NPC to move.
-		 */
-		private CharacterMoveTask(ScheduledExecutorService s, MovableCharacter c) {
-			this.service = s;
-			this.character = c;
-		}
-
-		@Override
-		public void run() {
-			Direction nextMove = character.nextMove();
-			long interval;
-			if (nextMove != null) {
-				move(character, nextMove);
-			}
-			interval = character.getInterval();
-			service.schedule(this, interval, TimeUnit.MILLISECONDS);
-		}
-	}
-
-	/**
-	 * A task that stop the Hunter Mode after an amount of time.
-	 *
-	 * @author Yarol Timur
-	 */
-	private final class TimerHunterTask extends TimerTask {
-		@Override
-		public void run() {
-			stopHunterMode();
-		}
-	}
-
-	/**
-	 * A task that respawn an NPC after being eat by Pacman.
-	 *
-	 * @author Yarol Timur
-	 */
-	private final class TimerRespawnTask extends TimerTask {
-
-		private Ghost ghost;
-
-		private TimerRespawnTask(Ghost ghost)
-		{
-			this.ghost = ghost;
-		}
-
-		@Override
-		public void run() {
-			Board b = getBoard();
-			ghost.setExplode(false);
-			ghost.occupy(b.getMiddleOfTheMap());
-			ghost.stopFearedMode();
-			stopCharacters();
-			startCharacters();
-			this.cancel();
-		}
-	}
-
-	/**
-	 * A task that handle the end of Hunter Mode.
-	 *
-	 * @author Yarol Timur
-	 */
-	private final class TimerWarningTask extends TimerTask {
-
-		@Override
-		public void run() { warningMode(); }
-	}
-
-
-	/**
-	 * A task that handle the end of Hunter Mode.
-	 *
-	 * @author Yarol Timur
-	 */
-	private final class TimerAddGhostTask extends TimerTask {
-
-		@Override
-		public void run() { addGhostTask(); }
-	}
-
-	private final class TimerAddFruitTask extends TimerTask {
-
-		@Override
-		public void run() { addFruitTask(); }
-	}
-
-	private final class TimerSpeedUpTask extends TimerTask {
-
-		@Override
-		public void run() { speedUpTask(); }
-	}
-
-
-	/**
-	 * An observer that will be notified when the level is won or lost.
-	 *
-	 * @author Jeroen Roosen
-	 */
-	public interface LevelObserver {
-
-		/**
-		 * The level has been won. Typically the level should be stopped when
-		 * this event is received.
-		 */
-		void levelWon();
-
-		/**
-		 * The level has been lost. Typically the level should be stopped when
-		 * this event is received.
-		 */
-		void levelLost();
-
-		/**
-		 * The level mode change for a while. Pacman become a Hunter and the Ghost are feared.
-		 */
-		void startHunterMode();
-
-		/**
-		 * A ghost need to be respawned.
-		 */
-		void respawnGhost();
-
-		/**
-		 * A Player can shoot bullets
-		 */
-		void ShootingEvent();
-
-		/**
-		 * A NPC is dead and need to be cleared from the board
-		 * @param deadBullets the list of the NPCs that are dead
-		 * @param bullet the npcs that are still in the game.
-		 */
-		void bulletCleanEvent(List<Bullet> deadBullets, Map<Bullet, ScheduledExecutorService> bullet);
-	}
 
 	/**
 	 * enable the movment of a bullet
@@ -868,7 +648,7 @@ public class Level {
 		MovableCharacter mc = b;
 		ScheduledExecutorService service = Executors
 				.newSingleThreadScheduledExecutor();
-		service.schedule(new CharacterMoveTask(service, mc),
+		service.schedule(tks.createCharacterMoveTask(service, mc),
 				mc.getInterval() / 2, TimeUnit.MILLISECONDS);
 		bullets.put(b, service);
 	}
