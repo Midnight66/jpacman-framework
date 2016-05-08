@@ -34,7 +34,7 @@ public class FruitFactory {
 	 * List of supported fruits.
 	 */
 	private enum Fruits {FISH, POTATO, TOMATO, POMGRANATE, BELLPEPPER, KIDNEYBEAN};
-	
+
 	/**
 	 * The level where this factory will produce fruits.
 	 */
@@ -49,7 +49,7 @@ public class FruitFactory {
 	
 	/**
 	 * Create a FruitFactory object
-	 * 
+	 *
 	 * @param spriteStore spriteStore The sprite store used for the sprites of the
 	 *                       fruits returned by this factory.
 	 * @param l The game level.

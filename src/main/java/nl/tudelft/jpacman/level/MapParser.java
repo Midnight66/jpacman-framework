@@ -120,8 +120,7 @@ public class MapParser {
 		Board board = boardCreator.createBoard(grid);
 		setTeleports(teleportList, teleportrefs, board);
 		setBridges(bridgeList, bridgeRefs);
-		Level l = levelCreator.createLevel(board, ghosts, startPositions);
-		return l;
+		return  levelCreator.createLevel(board, ghosts, startPositions);
 	}
 
 	/**
@@ -189,8 +188,7 @@ public class MapParser {
 
 		makeGrid(map, width, height, grid, ghosts, startPositions, null, null);
 		Board board = boardCreator.createBoard(grid);
-		Level l = levelCreator.createLevel(board, ghosts, startPositions);
-		return l;
+		return levelCreator.createLevel(board, ghosts, startPositions);
 	}
 	
 	private void setTeleports(List<Teleport> teleportList, List<int[]> teleportRefs, Board b){

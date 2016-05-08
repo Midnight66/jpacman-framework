@@ -59,6 +59,7 @@ public class Level {
 	 */
 	private final Map<Player, ScheduledExecutorService> players;
 
+
 	/**
 	 * <code>true</code> iff this level is currently in progress, i.e. players
 	 * and NPCs can move.
@@ -81,6 +82,12 @@ public class Level {
 	 * The Fruit factory for this level.
 	 */
 	private FruitFactory fruitFactory;
+
+	/**
+	 * The players on this level.
+	 */
+	private final Map<Player, ScheduledExecutorService> players;
+	
 
 	/**
 	 * The table of possible collisions between units.
@@ -653,6 +660,12 @@ public class Level {
 		PlayerCollisions.ateGhost.remove(PlayerCollisions.ateGhost.size()-1);
 		timerRespawn = new Timer();
 		timerRespawn.schedule(new TimerRespawnTask(ateGhost), 5000);
+	}
+	
+	public void respawnParticularGhost(Ghost ghost)
+	{
+		timerRespawn = new Timer();
+		timerRespawn.schedule(new TimerRespawnTask(ghost), 5000);
 	}
 
 	public void respawnParticularGhost(Ghost ghost)

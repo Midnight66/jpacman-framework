@@ -64,6 +64,7 @@ public class SinglePlayerGame extends Game {
 		return level;
 	}
 
+
 	@Override
 	public void ShootingEvent() {
 		if(shootLock){
