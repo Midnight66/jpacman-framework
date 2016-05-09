@@ -91,7 +91,7 @@ public class PlayerCollisions implements CollisionMap {
         if (ghost.getFearedMode() && collidedOn instanceof Player) {
             playerVersusEatableGhost((Player) collidedOn, ghost);
         }
-        else if (collidedOn instanceof Player) {
+        else if (collidedOn instanceof Player && !(((Player) collidedOn).isInvincible())) {
             playerVersusGhost((Player) collidedOn, ghost);
         }
         if (collidedOn instanceof Hole) {

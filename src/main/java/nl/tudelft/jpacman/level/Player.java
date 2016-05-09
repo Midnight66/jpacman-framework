@@ -67,7 +67,10 @@ public class Player extends MovableCharacter {
 		setMovable(true);
 		this.score = 0;
 		this.alive = true;
-		if(Level.getLevel().cheatMode){this.shooting = true;}
+		if(Level.getLevel().cheatMode){
+			this.shooting = true;
+			this.invincible = true;
+		}
 		else{this.shooting = false;}
 		setSprites(spriteMap);
 		this.deathSprite = deathAnimation;

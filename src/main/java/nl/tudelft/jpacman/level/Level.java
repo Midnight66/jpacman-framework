@@ -314,14 +314,12 @@ public class Level {
 		MovableCharacter mc;
 		ScheduledExecutorService service;
 		for (Ghost ghost : ghosts.keySet()) {
-			if(!ghost.hasExploded()){
-				mc = ghost;
-				service = Executors
-						.newSingleThreadScheduledExecutor();
-				service.schedule(tks.createCharacterMoveTask(service, mc),
-						mc.getInterval() , TimeUnit.MILLISECONDS);
-				ghosts.put(ghost, service);
-			}
+			mc = ghost;
+			service = Executors
+					.newSingleThreadScheduledExecutor();
+			service.schedule(tks.createCharacterMoveTask(service, mc),
+					mc.getInterval() , TimeUnit.MILLISECONDS);
+			ghosts.put(ghost, service);
 		}
 		for (Player player : players.keySet()) {
 			mc = player;
