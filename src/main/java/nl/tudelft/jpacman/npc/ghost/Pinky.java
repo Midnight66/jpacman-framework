@@ -88,10 +88,10 @@ public class Pinky extends Ghost {
 		if(getFearedMode()) {
 			return ((int) (SLOW_MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
 		}
-		if(!getAcceleration()){
-			return ((int) (MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
+		if(getAcceleration()){
+			return ((int) (ACCELERATED_MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
 		}
-		return ((int) (ACCELERATED_MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
+		return ((int) (MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
 	}
 
 	/**
@@ -111,14 +111,12 @@ public class Pinky extends Ghost {
 	@Override
 	public Direction nextMove() {
 		if (this.getFearedMode()) {
-			Direction d = randomMoveAtCrossroads();
-			return d;
+			return randomMoveAtCrossroads();
 		}
 
 		Unit player = Navigation.findNearest(Player.class, getSquare());
 		if (player == null) {
-			Direction d = randomMove();
-			return d;
+			return randomMove();
 		}
 
 		Direction targetDirection = player.getDirection();
@@ -130,10 +128,8 @@ public class Pinky extends Ghost {
 		List<Direction> path = Navigation.shortestPath(getSquare(),
 				destination, this);
 		if (path != null && !path.isEmpty()) {
-			Direction d = path.get(0);
-			return d;
+			return path.get(0);
 		}
-		Direction d = randomMove();
-		return d;
+		return randomMove();
 	}
 }

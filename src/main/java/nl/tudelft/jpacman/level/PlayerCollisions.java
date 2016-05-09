@@ -42,6 +42,11 @@ public class PlayerCollisions implements CollisionMap {
         }
     }
 
+    /**
+     * Colliosn entre une bullet et une unit
+     * @param mover La bullet
+     * @param collidedOn L'unit
+     */
     private void BulletColliding(Bullet mover, Unit collidedOn) {
         if (collidedOn instanceof Ghost) {
             ghostVersusBullet((Ghost) collidedOn, mover);
@@ -51,6 +56,11 @@ public class PlayerCollisions implements CollisionMap {
         }
     }
 
+    /**
+     * Collions entre le player et une unit
+     * @param player Le joueur
+     * @param collidedOn L'unit
+     */
     private void playerColliding(Player player, Unit collidedOn) {
         if (collidedOn instanceof Ghost && !(player.isInvincible())) {
             if (((Ghost) collidedOn).getFearedMode()){
@@ -109,6 +119,15 @@ public class PlayerCollisions implements CollisionMap {
             int deadGhostAnimationTime = 5 * 200;
             Timer timer = new Timer();
             timer.schedule(timerTask, deadGhostAnimationTime);
+            TimerTask timerTask2 = new TimerTask() {
+                public void run() {
+                    synchronized (Level.getLevel().startStopLockCharacter){
+                        Level.getLevel().stopCharacters();
+                        Level.getLevel().startCharacters();
+                    }
+                }
+            };
+            timer.schedule(timerTask2, 5000);
         }
     }
 
@@ -134,6 +153,8 @@ public class PlayerCollisions implements CollisionMap {
      */
     public void playerVersusEatableGhost(Player player, Ghost ghost)
     {
+        Timer timer;
+        TimerTask timerTask;
         ateGhost.add(ghost);
         ghost.leaveSquare();
         Ghost.ghostLeft--;
@@ -150,6 +171,16 @@ public class PlayerCollisions implements CollisionMap {
         if(Ghost.ghostAte == 4) {
             player.addPoints(1600);
         }
+        timerTask = new TimerTask() {
+            public void run() {
+                synchronized (Level.getLevel().startStopLockCharacter){
+                    Level.getLevel().stopCharacters();
+                    Level.getLevel().startCharacters();
+                }
+            }
+        };
+        timer = new Timer();
+        timer.schedule(timerTask, 5000);
     }
 
     /**

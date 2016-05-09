@@ -117,8 +117,6 @@ public class TimerTasks {
             ghost.setExplode(false);
             ghost.occupy(b.getMiddleOfTheMap());
             ghost.stopFearedMode();
-            level.stopCharacters();
-            level.startCharacters();
             this.cancel();
         }
     }

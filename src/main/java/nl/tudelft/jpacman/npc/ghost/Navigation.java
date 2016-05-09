@@ -51,8 +51,7 @@ public final class Navigation {
 			Node n = targets.remove(0);
 			Square s = n.getSquare();
 			if (s == to) {
-				List<Direction> path = n.getPath();
-				return path;
+				return n.getPath();
 			}
 			visited.add(s);
 			addNewTargets(traveller, targets, visited, n, s);
@@ -110,11 +109,8 @@ public final class Navigation {
 
 	/**
 	 * Determines whether a square has an occupant of a certain type.
-	 * 
-	 * @param type
-	 *            The type to search for.
-	 * @param square
-	 *            The square to search.
+	 * @param type The type to search for.
+	 * @param square The square to search.
 	 * @return A unit of type T, iff such a unit occupies this square, or
 	 *         <code>null</code> of none does.
 	 */
@@ -152,15 +148,11 @@ public final class Navigation {
 
 		/**
 		 * Creates a new node.
-		 * 
-		 * @param d
-		 *            The direction, which is <code>null</code> for the root
-		 *            node.
-		 * @param s
-		 *            The square.
-		 * @param p
-		 *            The parent node, which is <code>null</code> for the root
-		 *            node.
+		 * @param d The direction, which is <code>null</code>
+		 * or the root node.
+		 * @param s The square.
+		 * @param p The parent node, which is <code>null</code>
+		 *  for the root node.
 		 */
 		private Node(Direction d, Square s, Node p) {
 			this.direction = d;
@@ -169,8 +161,8 @@ public final class Navigation {
 		}
 
 		/**
-		 * @return The direction for this node, or <code>null</code> if this
-		 *         node is a root node.
+		 * @return The direction for this node, or <code>null</code>
+		 * if this node is a root node.
 		 */
 		private Direction getDirection() {
 			return direction;

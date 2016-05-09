@@ -1,10 +1,7 @@
 package nl.tudelft.jpacman.level;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,11 +16,7 @@ import org.junit.rules.ExpectedException;
 import com.google.common.collect.Lists;
 
 import nl.tudelft.jpacman.PacmanConfigurationException;
-import nl.tudelft.jpacman.board.Board;
-import nl.tudelft.jpacman.board.BoardFactory;
-import nl.tudelft.jpacman.board.Direction;
-import nl.tudelft.jpacman.board.Square;
-import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.board.*;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 import nl.tudelft.jpacman.npc.ghost.GhostFactory;
 import nl.tudelft.jpacman.sprite.PacManSprites;
@@ -31,15 +24,24 @@ import nl.tudelft.jpacman.sprite.Sprite;
 
 public class BridgeTest {
 
-	private Launcher launcher;
+	private PacManSprites pms;
+	private MapParser parser;
 	
 	@Rule
     public ExpectedException thrown = ExpectedException.none();
+	private CollisionMap cm;
+	private Player p;
 
 	@Before
 	public void setUp() {
+		Launcher launcher;
 		launcher = new Launcher();
 		launcher.setBoardToUse("/boardFruit.txt");
+		pms = new PacManSprites();
+		parser = new MapParser(new LevelFactory(pms,
+				new GhostFactory(pms)), new BoardFactory(pms));
+		cm = new PlayerCollisions();
+		p = new Player(pms.getPacmanSprites(),pms.getPacManDeathAnimation());
 	}
 	
 	/**
@@ -49,7 +51,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void initializationTest() throws IOException {
-		PacManSprites pms = new PacManSprites();
 		Map<Direction, Sprite> sprites = pms.getBridgeSprites();
 		Bridge bridge = new Bridge(sprites);
 		bridge.setDirection(Direction.EAST);
@@ -71,12 +72,10 @@ public class BridgeTest {
 	 */
 	@Test
 	public void boardBridgeTest() throws IOException {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
 		Board b = parser.parseMap(Lists.newArrayList(Lists.newArrayList(
 				"####", "#BB#", "####","----", "----", "H N ", "V P "))).getBoard();
-		Square s1 = b.squareAt(1, 1), s2 = b.squareAt(2, 1);
+		Square s1 = b.squareAt(1, 1);
+		Square s2 = b.squareAt(2, 1);
 		List<Unit> occupants1 =  s1.getOccupants();
 		List<Unit> occupants2 =  s2.getOccupants();
 		assertEquals(occupants1.size(), 1);
@@ -96,9 +95,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest1() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("###", "#B#",
 				"###","---", "---",  "B N"))).getBoard();
@@ -113,9 +109,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest2() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("###", "#B#",
 				"###","---",  "B N"))).getBoard();
@@ -129,9 +122,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest3() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("#####", "#BPB#",
 				"#####","-----", "-----", "H P  "))).getBoard();
@@ -145,9 +135,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest4() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("#####", "#BPB#",
 				"#####","-----", "-----"))).getBoard();
@@ -161,9 +148,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest5() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("###", "#B#",
 				"###","---", "---",  "H -"))).getBoard();
@@ -176,9 +160,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest6() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("#####", "#B  #",
 				"#####","-----", "-----",  "H P N"))).getBoard();
@@ -191,9 +172,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest7() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("###", "#B#",
 				"###","---", "---",  "H  "))).getBoard();
@@ -206,9 +184,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void fomatFailTest8() {
-		PacManSprites sprites = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(sprites,
-				new GhostFactory(sprites)), new BoardFactory(sprites));
         thrown.expect(PacmanConfigurationException.class);
 		parser.parseMap(Lists.newArrayList(Lists.newArrayList("#######", "#B    #",
 				"#######","-------", "-------",  "HM NN "))).getBoard();
@@ -222,9 +197,6 @@ public class BridgeTest {
 	 */
 	@Test
 	public void playerHorizontalBridgeTest() {
-		PacManSprites pms = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(pms,
-				new GhostFactory(pms)), new BoardFactory(pms));
 		Board b = parser.parseMap(Lists.newArrayList("######", "#    #","# B  #",
                 "#    #", "######", "------", "------", "H N   ")).getBoard();
 		Square bridgeSquare = b.squareAt(2, 2);
@@ -257,14 +229,9 @@ public class BridgeTest {
 	 */
 	@Test
 	public void playerVerticalBridgeTest() {
-		PacManSprites pms = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(pms,
-				new GhostFactory(pms)), new BoardFactory(pms));
         Board b = parser.parseMap(Lists.newArrayList("######", "#    #","# B  #",
                 "#    #", "######", "------", "------", "H N   ")).getBoard();
         Square bridgeSquare = b.squareAt(2, 2);
-		Player p = new Player(pms.getPacmanSprites(),pms.getPacManDeathAnimation());
-		CollisionMap cm = new PlayerCollisions();
 		Unit bridge = bridgeSquare.getOccupants().get(0);
 		Direction[] dirs = {Direction.WEST, Direction.EAST, Direction.NORTH,
 				Direction.SOUTH};
@@ -292,16 +259,12 @@ public class BridgeTest {
 	 */
 	@Test
 	public void collisionGhostBridgeTest() {
-		PacManSprites pms = new PacManSprites();
 		GhostFactory gf = new GhostFactory(pms);
-		MapParser parser = new MapParser(new LevelFactory(pms, gf),
-				new BoardFactory(pms));
 		Board b = parser.parseMap(Lists.newArrayList("######","#    #","# B  #",
 				"######", "------", "------", "V N   ")).getBoard();
 		Square bridgeSquare = b.squareAt(2, 2);
-		Unit p = (Unit) new Player(pms.getPacmanSprites(),pms.getPacManDeathAnimation());
+		Unit p = new Player(pms.getPacmanSprites(),pms.getPacManDeathAnimation());
 		Ghost g = gf.createBlinky();
-		CollisionMap cm = new PlayerCollisions();
 		Unit bridge = bridgeSquare.getOccupants().get(0);
 		p.occupy(bridgeSquare);
 		p.setDirection(Direction.EAST);
@@ -329,15 +292,10 @@ public class BridgeTest {
 	 */
 	@Test
 	public void collisionPelletBridgeTest() {
-		PacManSprites pms = new PacManSprites();
-		MapParser parser = new MapParser(new LevelFactory(pms,
-				new GhostFactory(pms)), new BoardFactory(pms));
 		Board b = parser.parseMap(Lists.newArrayList("######", "#    #","# B  #",
                 "#    #", "######", "------", "------", "H P   ")).getBoard();
 		Square BridgeSquare = b.squareAt(2, 2);
-		Player p = new Player(pms.getPacmanSprites(),pms.getPacManDeathAnimation());
-		CollisionMap cm = new PlayerCollisions();
-        p.occupy(BridgeSquare);
+		p.occupy(BridgeSquare);
 		p.setDirection(Direction.EAST);
 		List<Unit> occupants = BridgeSquare.getOccupants();
 		for(Unit occupant : occupants) {

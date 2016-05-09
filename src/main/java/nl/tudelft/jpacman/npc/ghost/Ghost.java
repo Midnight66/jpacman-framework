@@ -31,6 +31,9 @@ public abstract class Ghost extends NPC {
 	 */
 	private boolean exploded;
 
+	/**
+	 * The sprite store
+	 */
 	private static final PacManSprites SPRITE_STORE = new PacManSprites();
 
 	public static int count = 0;
@@ -237,7 +240,11 @@ public abstract class Ghost extends NPC {
 	public void setSpeed(double speed) {
 		this.speed = speed;
 	}
-	
+
+	/**
+	 * Accelération temporaire des ghosts
+	 * @param time Le temps de l'accélération
+     */
 	public void temporaryAcceleration(int time)
 	{
 		Map<Direction, Sprite> oldSprites = getSprites();

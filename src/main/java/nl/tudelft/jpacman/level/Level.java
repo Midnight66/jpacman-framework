@@ -30,7 +30,7 @@ public class Level {
 	/**
 	 * The board of this level.
 	 */
-	private final Board board;
+	private Board board;
 
 	/**
 	 * The lock that ensures moves are executed sequential.
@@ -42,6 +42,8 @@ public class Level {
 	 * other.
 	 */
 	private final Object startStopLock = new Object();
+
+	public final Object startStopLockCharacter = new Object();
 
 	/**
 	 * The NPCs of this level and, if they are running, their schedules.
@@ -65,7 +67,12 @@ public class Level {
 	 */
 	private boolean inProgress;
 
+	/**
+	 * To know if the game is in infinite map
+	 */
 	public boolean infiniteMode;
+
+	public boolean cheatMode = false;
 
 	/**
 	 * The squares from which players can start this game.
@@ -92,35 +99,62 @@ public class Level {
 	 */
 	private final List<LevelObserver> observers;
 
+	/**
+	 * The sprite store
+	 */
 	private static final PacManSprites SPRITE_STORE = new PacManSprites();
 
+	/**
+	 * To create all the timer
+	 */
 	private TimerTasks tks = new TimerTasks();
 
 	/**
 	 * Timer used to handle the game;
 	 */
 	private Timer timerHunterMode;
+
+	/**
+	 * Timer used to handle the game;
+	 */
 	private Timer timerRespawn;
+
+	/**
+	 * Timer used to handle the game;
+	 */
 	private Timer timerWarning;
+
+	/**
+	 * Timer used to handle the game;
+	 */
 	private Timer addGhostTask;
+
+	/**
+	 * Timer used to handle the game;
+	 */
 	private Timer addFruitTask;
+
+	/**
+	 * Timer used to handle the game;
+	 */
 	private Timer speedUpTask;
 
+	/**
+	 * The level of the game
+	 */
 	private static Level level;
 
+	/**
+	 * To generate random number
+	 */
 	private Random random;
 
 	/**
 	 * Creates a new level for the board.
-	 *
-	 * @param b
-	 *            The board for the level.
-	 * @param ghosts
-	 *            The ghosts on the board.
-	 * @param startPositions
-	 *            The squares on which players start on this board.
-	 * @param collisionMap
-	 *            The collection of collisions that should be handled.
+	 * @param b The board for the level.
+	 * @param ghosts The ghosts on the board.
+	 * @param startPositions The squares on which players start on this board.
+	 * @param collisionMap The collection of collisions that should be handled.
 	 */
 	public Level(Board b, List<NPC> ghosts, List<Square> startPositions,
 				 CollisionMap collisionMap) {
@@ -196,15 +230,17 @@ public class Level {
 	/**
 	 * Moves the unit into the given direction if possible and handles all
 	 * collisions.
-	 *
-	 * @param unit
-	 *            The unit to move.
-	 * @param direction
-	 *            The direction to move the unit in.
+	 * @param unit The unit to move.
+	 * @param direction The direction to move the unit in.
 	 */
 	public void move(Unit unit, Direction direction) {
 		assert unit != null;
 		assert direction != null;
+
+		/*if(unit instanceof Ghost)
+		{
+			System.out.println("vitesse du ghost = " + ((Ghost) unit).getSpeed());
+		}*/
 
 		if (!isInProgress() || (unit instanceof MovableCharacter && !((MovableCharacter) unit).isMovable())) {
 			return;
@@ -217,7 +253,7 @@ public class Level {
 
 			if (destination.isAccessibleTo(unit) && !(Bridge.blockedBybridge(unit, direction))) {
 				unit.setOnBridge(false);
-				List<Unit> occupants = destination.getOccupants();
+				final List<Unit> occupants = destination.getOccupants();
 				unit.occupy(destination);
 				for (Unit occupant : occupants) {
 					collisions.collide(unit, occupant);
@@ -277,28 +313,30 @@ public class Level {
 	public void startCharacters() {
 		MovableCharacter mc;
 		ScheduledExecutorService service;
-		for (final Ghost ghost : ghosts.keySet()) {
-			mc = ghost;
-			service = Executors
-					.newSingleThreadScheduledExecutor();
-			service.schedule(tks.createCharacterMoveTask(service, mc),
-					mc.getInterval() / 2, TimeUnit.MILLISECONDS);
-			ghosts.put(ghost, service);
+		for (Ghost ghost : ghosts.keySet()) {
+			if(!ghost.hasExploded()){
+				mc = ghost;
+				service = Executors
+						.newSingleThreadScheduledExecutor();
+				service.schedule(tks.createCharacterMoveTask(service, mc),
+						mc.getInterval() , TimeUnit.MILLISECONDS);
+				ghosts.put(ghost, service);
+			}
 		}
-		for (final Player player : players.keySet()) {
+		for (Player player : players.keySet()) {
 			mc = player;
 			service = Executors
 					.newSingleThreadScheduledExecutor();
 			service.schedule(tks.createCharacterMoveTask(service, mc),
-					mc.getInterval() / 2, TimeUnit.MILLISECONDS);
+					mc.getInterval() , TimeUnit.MILLISECONDS);
 			players.put(player, service);
 		}
-		for (final Bullet bullet : bullets.keySet()) {
+		for (Bullet bullet : bullets.keySet()) {
 			mc = bullet;
 			service = Executors
 					.newSingleThreadScheduledExecutor();
 			service.schedule(tks.createCharacterMoveTask(service, mc),
-					mc.getInterval() / 2, TimeUnit.MILLISECONDS);
+					mc.getInterval() , TimeUnit.MILLISECONDS);
 			bullets.put(bullet, service);
 		}
 	}
@@ -327,7 +365,7 @@ public class Level {
 		if(this.ghosts.size() < 10) {
 			ScheduledExecutorService service = Executors
 					.newSingleThreadScheduledExecutor();
-			GhostFactory ghostFact = new GhostFactory(SPRITE_STORE);
+			final GhostFactory ghostFact = new GhostFactory(SPRITE_STORE);
 			int nbr = random.nextInt(6);
 			int ghostIndex = random.nextInt(4);
 			addGhostTask.cancel();
@@ -345,8 +383,10 @@ public class Level {
 					squareGhost = null;
 				}
 			}
-			stopCharacters();
-			startCharacters();
+			synchronized (startStopLockCharacter){
+				stopCharacters();
+				startCharacters();
+			}
 		}
 	}
 
@@ -382,27 +422,26 @@ public class Level {
 		}
 	}
 
+	/**
+	 * Permet de mettre une unit sur le plateau
+	 * @param random1 L'abscisse
+	 * @param random2 L'ordonnée
+     * @return Le square sur lequel mettre l'unit
+     */
 	public Square addUnitOnSquare(int random1, int random2) {
 		Random random = new Random();
-		int X, Y;
-		int i, j;
+		int X;
+		int Y;
+		int i;
+		int j;
 		Square posPlayer = players.keySet().iterator().next().getSquare();
 		X = posPlayer.getCoordX();
 		Y = posPlayer.getCoordY();
 
-		i = Math.max(1+random.nextInt(random1), (X-(board.getWidthOfOneMap()-1)/2)+random.nextInt(random1));
-		j = Math.max(1+random.nextInt(random2), (Y-(board.getHeightOfOneMap()-1)/2)+random.nextInt(random2));
-
-		/*if (X - (board.getWidthOfOneMap()-1)/2 < 0) {
-			i = random.nextInt(random1);
-		} else {
-			i = ((board.getWidthOfOneMap()-1)/2) + random.nextInt(random1);
-		}
-		if (Y - (board.getHeightOfOneMap()-1)/2 < 0) {
-			j = random.nextInt(random2);
-		} else {
-			j = ((board.getHeightOfOneMap()-1)/2) + random.nextInt(random2);
-		}*/
+		i = Math.max(1+random.nextInt(random1),
+				Math.min(((X-(board.getWidthOfOneMap()-1)/2)+random.nextInt(random1)), board.getWidthOfOneMap()-1));
+		j = Math.max(1+random.nextInt(random2),
+				Math.min(((Y-(board.getHeightOfOneMap()-1)/2)+random.nextInt(random2)), board.getHeightOfOneMap()-1));
 		return board.squareAt(i, j);
 	}
 
@@ -499,9 +538,10 @@ public class Level {
 	}
 
 	/**
-	 * Returns <code>true</code> if at least one NPC is dead and need to be cleaned from the board.
-	 *
-	 * @return <code>true</code> if at least one NPC is dead and need to be cleaned from the board.
+	 * Returns <code>true</code> if at least one NPC is dead
+	 * and need to be cleaned from the board.
+	 * @return <code>true</code> if at least one NPC is dead
+	 * and need to be cleaned from the board.
 	 */
 	private List<Bullet> BulletToClean() {
 		List<Bullet> deadBullets = new ArrayList<>();
@@ -533,21 +573,21 @@ public class Level {
 	public void startHunterMode() {
 		Board b = getBoard();
 		Pellet.superPelletLeft--;
+		timerHunterMode.cancel();
+		timerWarning.cancel();
+		timerHunterMode = new Timer();
+		timerWarning = new Timer();
+		if (Pellet.superPelletLeft >= 2) {
+			timerHunterMode.schedule(tks.createStopHunterModeTask(), 7000);
+			timerWarning.schedule(tks.createWarningTask(), 5000, 250);
+		} else {
+			timerHunterMode.schedule(tks.createStopHunterModeTask(), 5000);
+			timerWarning.schedule(tks.createWarningTask(), 3000, 250);
+		}
 		for (int x = 0; x < b.getWidth(); x++) {
 			for (int y = 0; y < b.getHeight(); y++) {
 				for (Unit u : b.squareAt(x, y).getOccupants()) {
 					if (u instanceof Ghost) {
-						timerHunterMode.cancel();
-						timerWarning.cancel();
-						timerHunterMode = new Timer();
-						timerWarning = new Timer();
-						if (Pellet.superPelletLeft >= 2) {
-							timerHunterMode.schedule(tks.createStopHunterModeTask(), 7000);
-							timerWarning.schedule(tks.createWarningTask(), 5000, 250);
-						} else {
-							timerHunterMode.schedule(tks.createStopHunterModeTask(), 5000);
-							timerWarning.schedule(tks.createWarningTask(), 3000, 250);
-						}
 						((Ghost) u).startFearedMode();
 					}
 				}
@@ -565,7 +605,12 @@ public class Level {
 	 */
 	public void stopHunterMode() {
 		Board b = getBoard();
-		timerWarning.cancel();
+		timerWarning.purge();
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 		for (int x = 0; x < b.getWidth(); x++) {
 			for (int y = 0; y < b.getHeight(); y++) {
 				for (Unit u : b.squareAt(x, y).getOccupants()) {
@@ -605,7 +650,11 @@ public class Level {
 		timerRespawn = new Timer();
 		timerRespawn.schedule(tks.createRespawnTask(ateGhost), 5000);
 	}
-	
+
+	/**
+	 * Permet de remettre un ghost sur le jeu
+	 * @param ghost
+     */
 	public void respawnParticularGhost(Ghost ghost) {
 		timerRespawn = new Timer();
 		timerRespawn.schedule(tks.createRespawnTask(ghost), 5000);
@@ -631,14 +680,21 @@ public class Level {
 		return pellets;
 	}
 
+	/**
+	 * Permet de récupérer la liste des ghosts
+	 * @return Les ghosts
+     */
 	public Map<Ghost, ScheduledExecutorService> getGhosts() {
 		return ghosts;
 	}
 
+	/**
+	 * Return the level
+	 * @return The level
+     */
 	public static Level getLevel() {
 		return level;
 	}
-
 
 	/**
 	 * enable the movment of a bullet
@@ -649,7 +705,7 @@ public class Level {
 		ScheduledExecutorService service = Executors
 				.newSingleThreadScheduledExecutor();
 		service.schedule(tks.createCharacterMoveTask(service, mc),
-				mc.getInterval() / 2, TimeUnit.MILLISECONDS);
+				mc.getInterval(), TimeUnit.MILLISECONDS);
 		bullets.put(b, service);
 	}
 }

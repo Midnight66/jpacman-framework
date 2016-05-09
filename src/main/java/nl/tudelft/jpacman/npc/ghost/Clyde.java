@@ -94,10 +94,10 @@ public class Clyde extends Ghost {
 		if(getFearedMode()) {
 			return ((int) (SLOW_MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
 		}
-		if(!getAcceleration()){
-			return ((int) (MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
+		if(getAcceleration()){
+			return ((int) (ACCELERATED_MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
 		}
-		return ((int) (ACCELERATED_MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
+		return ((int) (MOVE_INTERVAL/this.speed)) + new Random().nextInt(INTERVAL_VARIATION);
 	}
 
 	/**
@@ -120,8 +120,7 @@ public class Clyde extends Ghost {
 	@Override
 	public Direction nextMove() {
 		if (this.getFearedMode()) {
-			Direction d = randomMoveAtCrossroads();
-			return d;
+			return randomMoveAtCrossroads();
 		}
 
 		Square target = Navigation.findNearest(Player.class, getSquare())
@@ -135,12 +134,10 @@ public class Clyde extends Ghost {
 		if (path != null && !path.isEmpty()) {
 			Direction d = path.get(0);
 			if (path.size() <= SHYNESS) {
-				Direction oppositeDir = OPPOSITES.get(d);
-				return oppositeDir;
+				return OPPOSITES.get(d);
 			}
 			return d;
 		}
-		Direction d = randomMove();
-		return d;
+		return randomMove();
 	}
 }

@@ -1,14 +1,13 @@
 package nl.tudelft.jpacman.fruit;
 
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import nl.tudelft.jpacman.board.PassThroughWall;
+import nl.tudelft.jpacman.board.Board;
+import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.level.Level;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
-import nl.tudelft.jpacman.npc.ghost.Navigation;
 import nl.tudelft.jpacman.sprite.Sprite;
 
 /**
@@ -20,7 +19,9 @@ public class Pomgranate extends Fruit {
 	/**
 	 *  The level where this fruit was created.
 	 */
-	private Level level;
+	private final Level level;
+
+	private Ghost g;
 	
 	/**
 	 * Create a Pomgranate object
@@ -34,30 +35,45 @@ public class Pomgranate extends Fruit {
 		level = l;
 	}
 
+	/**
+	 * Activate the effect
+	 * @param p the player that ate this fruit.
+     */
 	@Override
 	public void fruitEffect(Player p) {
-		Set<Ghost> ghosts = level.getGhosts().keySet();
 		Timer timer;
 		TimerTask timerTask;
-		PassThroughWall ptw = new PassThroughWall();
-		for(Ghost ghost: ghosts){
-			if(ghost.getSquare() != null &&
-					Navigation.shortestPath(p.getSquare(),
-							ghost.getSquare(),
-							ptw).size() <= 4 &&
-					!(ghost.hasExploded())){
-				ghost.setExplode(true);
-				timerTask = new TimerTask() {
-					public void run() {
-						ghost.leaveSquare();
-						Level.getLevel().respawnParticularGhost(ghost);
+		TimerTask timerTask2;
+		Board board = level.getBoard();
+		int X = p.getSquare().getCoordX();
+		int Y = p.getSquare().getCoordY();
+		for(int x=Math.max(0,X-4); x<Math.min(X+4,board.getWidth()-1); x++){
+			for(int y=Math.max(0,Y-4); y<Math.min(Y+4,board.getHeight()-1); y++){
+				for(Unit u : board.squareAt(x, y).getOccupants()){
+					if(u instanceof Ghost) {
+						g = (Ghost) u;
+						g.setExplode(true);
+						level.respawnParticularGhost(g);
 					}
-				};
-				int deadGhostAnimationTime = 5 * 200;
-				timer = new Timer();
-				timer.schedule(timerTask, deadGhostAnimationTime);
+				}
 			}
 		}
+		timerTask = new TimerTask() {
+			public void run() {
+				synchronized (level.startStopLockCharacter){
+					level.stopCharacters();
+					level.startCharacters();
+				}
+			}
+		};
+		timerTask2 = new TimerTask() {
+			public void run() {
+				g.leaveSquare();
+			}
+		};
+		timer = new Timer();
+		timer.schedule(timerTask, 5000);
+		timer.schedule(timerTask2, 1000);
 	}
 }
 

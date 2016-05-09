@@ -29,6 +29,9 @@ import javax.swing.*;
  */
 public class Launcher {
 
+	/**
+	 * The sprite store
+	 */
 	private static final PacManSprites SPRITE_STORE = new PacManSprites();
 
 	/**
@@ -36,8 +39,14 @@ public class Launcher {
 	 */
 	private static Launcher launcher;
 
+	/**
+	 * The PacmanUI
+	 */
 	private static PacManUI pacManUI;
 
+	/**
+	 * The game
+	 */
 	private static Game game;
 
 	/**
@@ -45,6 +54,9 @@ public class Launcher {
 	 */
 	private String boardToUse;
 
+	/**
+	 * Le constructeur de la classe Launcher
+	 */
 	public Launcher()
 	{
 		Launcher.launcher = this;
@@ -64,8 +76,8 @@ public class Launcher {
 	 * @return a new Game.
 	 */
 	public Game makeGame() {
-		GameFactory gf = getGameFactory();
-		String[] board = {"Jeu normal", "Map infinie", "Jeu avec fruits"};
+		final GameFactory gf = getGameFactory();
+		final String[] board = {"Jeu normal", "Map infinie", "Jeu avec fruits", "Cheat Mode"};
 		String nom = (String) JOptionPane.showInputDialog(null,
 				"Veuillez choisir un mode de jeu !",
 				"PACMAN GAME !",
@@ -83,6 +95,12 @@ public class Launcher {
 		}
 		else if(nom.equals(board[2])){
 			boardToUse = "/boardFruit.txt";
+		}
+		else if(nom.equals(board[3])){
+			boardToUse = "/board.txt";
+			level = makeLevel();
+			level.cheatMode = true;
+			return gf.createSinglePlayerGame(level);
 		}
 		else{
 			boardToUse = "/board.txt";
@@ -162,11 +180,8 @@ public class Launcher {
 
 	/**
 	 * Adds key events UP, DOWN, LEFT and RIGHT to a game.
-	 *
-	 * @param builder
-	 *            The {@link PacManUiBuilder} that will provide the UI.
-	 * @param game
-	 *            The game that will process the events.
+	 * @param builder The {@link PacManUiBuilder} that will provide the UI.
+	 * @param game The game that will process the events.
 	 */
 	protected void addSinglePlayerKeys(final PacManUiBuilder builder,
 									   final Game game) {

@@ -36,18 +36,11 @@ public class CollisionInteractionMap implements CollisionMap {
 	/**
 	 * Adds a two-way collision interaction to this collection, i.e. the
 	 * collision handler will be used for both C1 versus C2 and C2 versus C1.
-	 * 
-	 * @param <C1>
-	 *            The collider type.
-	 * @param <C2>
-	 *            The collidee (unit that was moved into) type.
-	 * 
-	 * @param collider
-	 *            The collider type.
-	 * @param collidee
-	 *            The collidee type.
-	 * @param handler
-	 *            The handler that handles the collision.
+	 * @param <C1> The collider type.
+	 * @param <C2> The collidee (unit that was moved into) type.
+	 * @param collider The collider type.
+	 * @param collidee The collidee type.
+	 * @param handler The handler that handles the collision.
 	 */
 	public <C1 extends Unit, C2 extends Unit> void onCollision(
 			Class<C1> collider, Class<C2> collidee,
@@ -57,22 +50,13 @@ public class CollisionInteractionMap implements CollisionMap {
 
 	/**
 	 * Adds a collision interaction to this collection.
-	 * 
-	 * @param <C1>
-	 *            The collider type.
-	 * @param <C2>
-	 *            The collidee (unit that was moved into) type.
-	 * 
-	 * @param collider
-	 *            The collider type.
-	 * @param collidee
-	 *            The collidee type.
-	 * @param symetric
-	 *            <code>true</code> if this collision is used for both
-	 *            C1 against C2 and vice versa;
-	 *            <code>false</code> if only for C1 against C2.
-	 * @param handler
-	 *            The handler that handles the collision.
+	 * @param <C1> The collider type.
+	 * @param <C2> The collidee (unit that was moved into) type.
+	 * @param collider The collider type.
+	 * @param collidee The collidee type.
+	 * @param symetric <code>true</code> if this collision is used for both
+	 * C1 against C2 and vice versa; <code>false</code> if only for C1 against C2.
+	 * @param handler The handler that handles the collision.
 	 */
 	public <C1 extends Unit, C2 extends Unit> void onCollision(
 			Class<C1> collider, Class<C2> collidee, boolean symetric,
@@ -86,13 +70,9 @@ public class CollisionInteractionMap implements CollisionMap {
 
 	/**
 	 * Adds the collision interaction..
-	 * 
-	 * @param collider
-	 *            The collider type.
-	 * @param collidee
-	 *            The collidee type.
-	 * @param handler
-	 *            The handler that handles the collision.
+	 * @param collider The collider type.
+	 * @param collidee The collidee type.
+	 * @param handler The handler that handles the collision.
 	 */
 	private void addHandler(Class<? extends Unit> collider,
 			Class<? extends Unit> collidee, CollisionHandler<?, ?> handler) {
@@ -110,16 +90,10 @@ public class CollisionInteractionMap implements CollisionMap {
 	/**
 	 * Handles the collision between two colliding parties, if a suitable
 	 * collision handler is listed.
-	 * 
-	 * @param <C1>
-	 *            The collider type.
-	 * @param <C2>
-	 *            The collidee (unit that was moved into) type.
-	 * 
-	 * @param collider
-	 *            The collider.
-	 * @param collidee
-	 *            The collidee.
+	 * @param <C1> The collider type.
+	 * @param <C2> The collidee (unit that was moved into) type.
+	 * @param collider The collider.
+	 * @param collidee The collidee.
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
@@ -151,11 +125,8 @@ public class CollisionInteractionMap implements CollisionMap {
 	/**
 	 * Figures out the most specific class that is listed in the map. I.e. if A
 	 * extends B and B is listed while requesting A, then B will be returned.
-	 * 
-	 * @param map
-	 *            The map with the key collection to find a matching class in.
-	 * @param key
-	 *            The class to search the most suitable key for.
+	 * @param map The map with the key collection to find a matching class in.
+	 * @param key The class to search the most suitable key for.
 	 * @return The most specific class from the key collection.
 	 */
 	private Class<? extends Unit> getMostSpecificClass(
@@ -171,9 +142,7 @@ public class CollisionInteractionMap implements CollisionMap {
 
 	/**
 	 * Returns a list of all classes and interfaces the class inherits.
-	 * 
-	 * @param clazz
-	 *            The class to create a list of super classes and interfaces
+	 * @param clazz The class to create a list of super classes and interfaces
 	 *            for.
 	 * @return A list of all classes and interfaces the class inherits.
 	 */
@@ -203,36 +172,25 @@ public class CollisionInteractionMap implements CollisionMap {
 
 	/**
 	 * Handles the collision between two colliding parties.
-	 * 
 	 * @author Michael de Jong
-	 * 
-	 * @param <C1>
-	 *            The collider type.
-	 * @param <C2>
-	 *            The collidee type.
+	 * @param <C1> The collider type.
+	 * @param <C2> The collidee type.
 	 */
 	public interface CollisionHandler<C1 extends Unit, C2 extends Unit> {
 
 		/**
 		 * Handles the collision between two colliding parties.
-		 * 
-		 * @param collider
-		 *            The collider.
-		 * @param collidee
-		 *            The collidee.
+		 * @param collider The collider.
+		 * @param collidee The collidee.
 		 */
 		void handleCollision(C1 collider, C2 collidee);
 	}
 
 	/**
 	 * An symmetrical copy of a collision hander.
-	 * 
 	 * @author Michael de Jong
-	 * 
-	 * @param <C1>
-	 *            The collider type.
-	 * @param <C2>
-	 *            The collidee type.
+	 * @param <C1> The collider type.
+	 * @param <C2> The collidee type.
 	 */
 	private static class InverseCollisionHandler<C1 extends Unit, C2 extends Unit>
 			implements CollisionHandler<C1, C2> {

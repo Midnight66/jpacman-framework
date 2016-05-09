@@ -36,7 +36,8 @@ public class Bridge extends Unit{
 	
 	/**
 	 * Return Whether the a direction is parralel to the direction of this bridge.
-	 * @return true when both direction are parralel and false if they are perpendicular. 
+	 * @return true when both direction are parralel
+	 * and false if they are perpendicular.
 	 */
 	public boolean parralelTo(Direction dir){
 		Direction bDir = getDirection();
@@ -50,8 +51,10 @@ public class Bridge extends Unit{
 	}
 	
 	/**
-	 * enable the effect of this bridge on the unit, when a unit is on a bridge
-	 * its position with respect to a bridge (see method setOnBridge in the Unit class)
+	 * enable the effect of this bridge on the unit,
+	 * when a unit is on a bridge
+	 * its position with respect to a bridge
+	 * (see method setOnBridge in the Unit class)
 	 * have to be changed to put the unit on this bridge.
 	 * @param unit that have to be set as on a bridge
 	 */
@@ -74,10 +77,12 @@ public class Bridge extends Unit{
 	 * to sum up, on a bridge you can only move on the direction of this bridge
 	 * and when you're under that bridge, you can only move in the direction
 	 * perpendicular to the direction of that bridge and this method returns whether
-	 * the unit can't go in a direction because a bridge prevent it from going to that direction.
+	 * the unit can't go in a direction because a bridge
+	 * prevent it from going to that direction.
 	 * @param unit that have to be set as on a bridge
 	 * @param direction the direction where this Unit want to go.
-	 * @returns true is the unit can't go in that direction because there a bridge that block it. 
+	 * @returns true is the unit can't go in that direction
+	 * because there a bridge that block it.
 	 */
 	public static boolean blockedBybridge(Unit unit, Direction direction){
 		Unit u = unit.getSquare().getOccupants().get(0);
